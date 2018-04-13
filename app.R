@@ -31,16 +31,17 @@ for (zipfile in files.to.read){
 }
 df <- dfall
 rm(dfall)
+setwd("..")
 
 #Set data types properly
-df$mo_yr_completed <- as.Date(floor_date(ymd_hms(df$date_completed),"month")) #Need as.Date for scale_x_date
+df$mo_yr_completed <- as.Date(floor_date(ymd_hms(df$date_completed),"month"))
 df$item_score <- as.integer(df$item_score)
 df$item_max_score <- as.integer(df$item_max_score)
 df$time_in_secs <- as.integer(df$time_in_secs)
 df <- df[nchar(df$grade)>0,]  #exclude records with grade of ""
 df <- df[!is.na(df$grade),]   #exclude records without grade
 df$grade <- paste("Grade", df$grade)
-setwd("..")
+
 
 
 # Define UI for application that draws a facted graph
@@ -55,9 +56,7 @@ ui <- fluidPage(
         selectInput(inputId = "district", label = strong("District"),
                     choices = sort(unique(df$district_name)),
                     selected = "Broward Co School District"),
-        selectInput(inputId = "gradesorno", label = strong("Grade Level Detail"),
-                    choices = c("Yes", "No"),
-                    selected = "No")
+        checkboxInput("gradesorno", "Show grade-level detail?", FALSE)
       ),
       
       # Show a faceted graph
@@ -74,13 +73,13 @@ server <- function(input, output) {
        
        dist <- df %>% filter(district_name==input$district)
        
-       if(input$gradesorno=="No"){
+       if(!input$gradesorno){
        
           BySchoolMonth <- dist %>%
             group_by(school_name, mo_yr_completed) %>%
             summarize(nItems=n(),
-                       nStudents=n_distinct(student_personal_refid),
-                       avgScore=sum(item_score)/sum(item_max_score),
+                      nStudents=n_distinct(student_personal_refid),
+                      avgScore=sum(item_score)/sum(item_max_score),
                       avgDur=mean(time_in_secs))
           
           ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=nItems)) +
@@ -88,8 +87,7 @@ server <- function(input, output) {
             scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
             scale_y_continuous(labels=comma) +
             labs(title="Ed Learnosity Items by School and Month",
-                 x="", y="Number of Items",
-                 subtitle="# Students at Left in Red, Avg Score at Center in Green, Avg Duration (in seconds) at Right in Blue") +
+                 x="", y="Number of Items") +
             facet_grid(school_name ~ .) +
             theme(strip.text.y = element_text(angle=0),
                   legend.position="none") + 
@@ -115,9 +113,9 @@ server <- function(input, output) {
           ggplot(BySchoolGradeMonth, aes(x=grade, y=nItems)) +
               geom_bar(stat="identity", fill='goldenrod') +
               scale_y_continuous(labels=comma) +
-              labs(title="Ed Learnosity Items by School, Grade, and Month",
+              labs(title="Ed Learnosity Items by School, Month, and Grade",
                    x="", y="Number of Items") +
-              facet_grid(school_name ~ mo_yr_completed) +
+              facet_grid(school_name ~ as.factor(substr(mo_yr_completed,1,7))) +
               theme(strip.text.y = element_text(angle=0),
                     axis.text.x = element_text(angle=90, vjust=0.5),
                     legend.position="none")
@@ -127,4 +125,3 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
