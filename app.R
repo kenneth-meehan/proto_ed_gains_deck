@@ -103,7 +103,7 @@ server <- function(input, output) {
             if(input$extraStats=="Average Durations in Seconds"){
               BySchoolMonth$nStudents <- NA
               BySchoolMonth$avgScore <- NA
-          }
+            }
 
           ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=nItems)) +
             geom_bar(stat="identity", fill='goldenrod') +
@@ -133,16 +133,44 @@ server <- function(input, output) {
                       nStudents=n_distinct(student_personal_refid),
                       avgScore=sum(item_score)/sum(item_max_score),
                       avgDur=mean(time_in_secs))
-            
+          #Eliminate display of stats as user specifies
+          if(input$extraStats=="None"){
+            BySchoolGradeMonth$nStudents <- NA
+            BySchoolGradeMonth$avgScore <- NA
+            BySchoolGradeMonth$avgDur <- NA
+          }
+          if(input$extraStats=="Number of Students"){
+            BySchoolGradeMonth$avgScore <- NA
+            BySchoolGradeMonth$avgDur <- NA
+          }
+          if(input$extraStats=="Average Scores"){
+            BySchoolGradeMonth$nStudents <- NA
+            BySchoolGradeMonth$avgDur <- NA
+          }
+          if(input$extraStats=="Average Durations in Seconds"){
+            BySchoolGradeMonth$nStudents <- NA
+            BySchoolGradeMonth$avgScore <- NA
+          }
+          
           ggplot(BySchoolGradeMonth, aes(x=grade, y=nItems)) +
               geom_bar(stat="identity", fill='goldenrod') +
               scale_y_continuous(labels=comma) +
               labs(title="Ed Learnosity Items by School, Month, and Grade",
+                   subtitle=paste("Blue Annotations:",input$extraStats),
                    x="", y="Number of Items") +
               facet_grid(school_name ~ as.factor(substr(mo_yr_completed,1,7))) +
               theme(strip.text.y = element_text(angle=0),
                     axis.text.x = element_text(angle=90, vjust=0.5),
-                    legend.position="none")
+                    legend.position="none") +
+              geom_text(aes(label = nStudents, y = 0),
+                        position = position_dodge(0.9), size=3,
+                        vjust=0, hjust=0.5, color="blue") +
+              geom_text(aes(label = round(100*avgScore), y = 0),
+                        position = position_dodge(0.9), size=3,
+                        vjust=0, hjust=0.5, color="blue") +
+              geom_text(aes(label = round(avgDur), y = 0), size=3,
+                        position = position_dodge(0.9),
+                        vjust=0, hjust=0.5, color="blue")
         }
    })
 }
