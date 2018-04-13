@@ -48,7 +48,7 @@ df$grade <- paste("Grade", df$grade)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Ed/Learnosity Data Exploration"),
+   titlePanel("Ed Learnosity Data Exploration"),
    
    # Sidebar with inputs 
    sidebarLayout(
@@ -56,7 +56,11 @@ ui <- fluidPage(
         selectInput(inputId = "district", label = strong("District"),
                     choices = sort(unique(df$district_name)),
                     selected = "Broward Co School District"),
-        checkboxInput("gradesorno", "Show grade-level detail?", FALSE)
+        checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
+        #checkboxInput("scoresorno", "Show average scores?", FALSE)
+        selectInput(inputId = "extraStats", label = strong("Show Additional Stats?"),
+                    choices = c("Number of Students", "Average Scores", "Average Durations in Seconds", "None"),
+                    selected = "None")
       ),
       
       # Show a faceted graph
@@ -82,24 +86,44 @@ server <- function(input, output) {
                       avgScore=sum(item_score)/sum(item_max_score),
                       avgDur=mean(time_in_secs))
           
+            #Eliminate display of stats as user specifies
+            if(input$extraStats=="None"){
+              BySchoolMonth$nStudents <- NA
+              BySchoolMonth$avgScore <- NA
+              BySchoolMonth$avgDur <- NA
+            }
+            if(input$extraStats=="Number of Students"){
+              BySchoolMonth$avgScore <- NA
+              BySchoolMonth$avgDur <- NA
+            }
+            if(input$extraStats=="Average Scores"){
+              BySchoolMonth$nStudents <- NA
+              BySchoolMonth$avgDur <- NA
+            }
+            if(input$extraStats=="Average Durations in Seconds"){
+              BySchoolMonth$nStudents <- NA
+              BySchoolMonth$avgScore <- NA
+          }
+
           ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=nItems)) +
             geom_bar(stat="identity", fill='goldenrod') +
             scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
             scale_y_continuous(labels=comma) +
             labs(title="Ed Learnosity Items by School and Month",
+                 subtitle=paste("Blue Annotations:",input$extraStats),
                  x="", y="Number of Items") +
             facet_grid(school_name ~ .) +
             theme(strip.text.y = element_text(angle=0),
                   legend.position="none") + 
             geom_text(aes(label = nStudents, y = 0),
                       position = position_dodge(0.9),
-                      vjust=0, hjust=2.3, color="red") +
+                      vjust=0, hjust=0.5, color="blue") +
             geom_text(aes(label = round(100*avgScore), y = 0),
                       position = position_dodge(0.9),
-                      vjust=0, hjust=0.5, color="darkgreen") +
+                      vjust=0, hjust=0.5, color="blue") +
             geom_text(aes(label = round(avgDur), y = 0),
                       position = position_dodge(0.9),
-                      vjust=0, hjust=-0.8, color="blue")
+                      vjust=0, hjust=0.5, color="blue")
 
        }else{
          
