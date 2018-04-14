@@ -33,7 +33,7 @@ library(scales)
 # rm(dfall)
 # setwd("..")
 
-df <- read.csv("BrowardEd.csv", colClasses = "character")   #for testing purposes
+df <- read.csv("BrowardEd.csv", colClasses = "character")   #speedily read just unzipped broward data, for testing purposes
 
 
 #Set data types properly
@@ -59,10 +59,13 @@ ui <- fluidPage(
                     choices = sort(unique(df$district_name)),
                     selected = "Broward Co School District"),
         checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
-        #checkboxInput("scoresorno", "Show average scores?", FALSE)
-        selectInput(inputId = "extraStats", label = strong("Show Additional Stats?"),
-                    choices = c("Number of Students", "Average Scores", "Average Durations in Seconds", "None"),
-                    selected = "Number of Students"),
+        # selectInput(inputId = "extraStats", label = strong("Show Additional Stats?"),
+        #             choices = c("Number of Students", "Average Scores", "Average Durations in Seconds", "None"),
+        #             selected = "Number of Students"),
+        radioButtons("extraStats", "Choose Annotation",
+                     c("Numbers of Students" = "NumbersOfStudents",
+                       "Average Scores" = "AvgScores",
+                       "Average Durations (in seconds)" = "AvgDurations")),
         radioButtons("yaxis", "Vertical Axis Represents What?",
                      c("Number of Items (total)" = "NumberOfItems",
                        "Items per (active) Student" = "ItemsPerStudent"))
@@ -87,31 +90,30 @@ server <- function(input, output) {
           BySchoolMonth <- dist %>%
             group_by(school_name, mo_yr_completed) %>%
             summarize(NumberOfItems=n(),
-                      nStudents=n_distinct(student_personal_refid),
-                      ItemsPerStudent=NumberOfItems/nStudents,
-                      avgScore=sum(item_score)/sum(item_max_score),
-                      avgDur=mean(time_in_secs))
+                      NumbersOfStudents=n_distinct(student_personal_refid),
+                      ItemsPerStudent=NumberOfItems/NumbersOfStudents,
+                      AvgScores=round(100*sum(item_score)/sum(item_max_score)),
+                      AvgDurations=round(mean(time_in_secs)))
           
             #Eliminate display of stats as user specifies
             if(input$extraStats=="None"){
-              BySchoolMonth$nStudents <- NA
-              BySchoolMonth$avgScore <- NA
-              BySchoolMonth$avgDur <- NA
+              BySchoolMonth$NumbersOfStudents <- NA
+              BySchoolMonth$AvgScores <- NA
+              BySchoolMonth$AvgDurations <- NA
             }
-            if(input$extraStats=="Number of Students"){
-              BySchoolMonth$avgScore <- NA
-              BySchoolMonth$avgDur <- NA
+            if(input$extraStats=="NumbersOfStudents"){
+              BySchoolMonth$AvgScores <- NA
+              BySchoolMonth$AvgDurations <- NA
             }
-            if(input$extraStats=="Average Scores"){
-              BySchoolMonth$nStudents <- NA
-              BySchoolMonth$avgDur <- NA
+            if(input$extraStats=="AvgScores"){
+              BySchoolMonth$NumbersOfStudents <- NA
+              BySchoolMonth$AvgDurations <- NA
             }
-            if(input$extraStats=="Average Durations in Seconds"){
-              BySchoolMonth$nStudents <- NA
-              BySchoolMonth$avgScore <- NA
+            if(input$extraStats=="AvgDurations"){
+              BySchoolMonth$NumbersOfStudents <- NA
+              BySchoolMonth$AvgScores <- NA
             }
 
-          # ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=nItems)) +
           ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
             geom_bar(stat="identity", fill='goldenrod') +
             scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
@@ -122,42 +124,46 @@ server <- function(input, output) {
             facet_grid(school_name ~ .) +
             theme(strip.text.y = element_text(angle=0),
                   legend.position="none") + 
-            geom_text(aes(label = nStudents, y = 0),
-                      position = position_dodge(0.9),
-                      vjust=0, hjust=0.5, color="blue") +
-            geom_text(aes(label = round(100*avgScore), y = 0),
-                      position = position_dodge(0.9),
-                      vjust=0, hjust=0.5, color="blue") +
-            geom_text(aes(label = round(avgDur), y = 0),
+            # geom_text(aes(label = nStudents, y = 0),
+            #           position = position_dodge(0.9),
+            #           vjust=0, hjust=0.5, color="blue") +
+            # geom_text(aes(label = avgScore, y = 0),
+            #           position = position_dodge(0.9),
+            #           vjust=0, hjust=0.5, color="blue") +
+            # geom_text(aes(label = avgDur, y = 0),
+            #           position = position_dodge(0.9),
+            #           vjust=0, hjust=0.5, color="blue")
+            geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                       position = position_dodge(0.9),
                       vjust=0, hjust=0.5, color="blue")
+
 
        }else{
          
           BySchoolGradeMonth <- dist %>%
             group_by(school_name, grade, mo_yr_completed) %>%
             summarize(NumberOfItems=n(),
-                      nStudents=n_distinct(student_personal_refid),
-                      ItemsPerStudent=NumberOfItems/nStudents,
-                      avgScore=sum(item_score)/sum(item_max_score),
-                      avgDur=mean(time_in_secs))
+                      NumbersOfStudents=n_distinct(student_personal_refid),
+                      ItemsPerStudent=NumberOfItems/NumbersOfStudents,
+                      AvgScores=round(100*sum(item_score)/sum(item_max_score)),
+                      AvgDurations=round(mean(time_in_secs)))
           #Eliminate display of stats as user specifies
           if(input$extraStats=="None"){
-            BySchoolGradeMonth$nStudents <- NA
-            BySchoolGradeMonth$avgScore <- NA
-            BySchoolGradeMonth$avgDur <- NA
+            BySchoolGradeMonth$NumbesOfStudents <- NA
+            BySchoolGradeMonth$AvgScores <- NA
+            BySchoolGradeMonth$AvgDurations <- NA
           }
-          if(input$extraStats=="Number of Students"){
-            BySchoolGradeMonth$avgScore <- NA
-            BySchoolGradeMonth$avgDur <- NA
+          if(input$extraStats=="NumbersOfStudents"){
+            BySchoolGradeMonth$AvgScores <- NA
+            BySchoolGradeMonth$AvgDurations <- NA
           }
-          if(input$extraStats=="Average Scores"){
-            BySchoolGradeMonth$nStudents <- NA
-            BySchoolGradeMonth$avgDur <- NA
+          if(input$extraStats=="AvgScores"){
+            BySchoolGradeMonth$NumbersOfStudents <- NA
+            BySchoolGradeMonth$AvgDurations <- NA
           }
-          if(input$extraStats=="Average Durations in Seconds"){
-            BySchoolGradeMonth$nStudents <- NA
-            BySchoolGradeMonth$avgScore <- NA
+          if(input$extraStats=="AvgDurations"){
+            BySchoolGradeMonth$NumbersOfStudents <- NA
+            BySchoolGradeMonth$AvgScores <- NA
           }
           
           ggplot(BySchoolGradeMonth, aes(x=grade, y=eval(as.name(input$yaxis)))) +
@@ -170,13 +176,16 @@ server <- function(input, output) {
               theme(strip.text.y = element_text(angle=0),
                     axis.text.x = element_text(angle=90, vjust=0.5),
                     legend.position="none") +
-              geom_text(aes(label = nStudents, y = 0),
-                        position = position_dodge(0.9), size=3,
-                        vjust=0, hjust=0.5, color="blue") +
-              geom_text(aes(label = round(100*avgScore), y = 0),
-                        position = position_dodge(0.9), size=3,
-                        vjust=0, hjust=0.5, color="blue") +
-              geom_text(aes(label = round(avgDur), y = 0), size=3,
+              # geom_text(aes(label = nStudents, y = 0),
+              #           position = position_dodge(0.9), size=3,
+              #           vjust=0, hjust=0.5, color="blue") +
+              # geom_text(aes(label = avgScore, y = 0),
+              #           position = position_dodge(0.9), size=3,
+              #           vjust=0, hjust=0.5, color="blue") +
+              # geom_text(aes(label = avgDur, y = 0), size=3,
+              #           position = position_dodge(0.9),
+              #           vjust=0, hjust=0.5, color="blue")
+              geom_text(aes(label = eval(as.name(input$extraStats)), y = 0),
                         position = position_dodge(0.9),
                         vjust=0, hjust=0.5, color="blue")
         }
