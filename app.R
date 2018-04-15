@@ -26,25 +26,27 @@ ui <- fluidPage(
    titlePanel("Ed Learnosity Data Exploration"),
    
    # Sidebar with inputs 
-   sidebarLayout(
-      sidebarPanel(
-        selectInput(inputId = "district", label = strong("District"),
-                    choices = sort(unique(df$district_name)),
-                    selected = "District B"),
-        checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
-        radioButtons("extraStats", "Choose Annotation",
-                     c("Numbers of (active) Students" = "NumbersOfStudents",
-                       "Average Scores" = "AvgScores",
-                       "Average Durations (in seconds)" = "AvgDurations")),
-        radioButtons("yaxis", "Vertical Axis Represents What?",
-                     c("Items per (active) Student" = "ItemsPerStudent",
-                       "Number of Items (total)" = "NumberOfItems"))
+   fluidRow(
+      column(3,    #Use 3 of the 12 columns for the sidebar
+             wellPanel(
+                selectInput(inputId = "district", label = strong("District"),
+                            choices = sort(unique(df$district_name)),
+                            selected = "District B"),
+                checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
+                radioButtons("extraStats", "Choose Annotation",
+                             c("Numbers of (active) Students" = "NumbersOfStudents",
+                               "Average Scores" = "AvgScores",
+                               "Average Durations (in seconds)" = "AvgDurations")),
+                radioButtons("yaxis", "Vertical Axis Represents What?",
+                             c("Items per (active) Student" = "ItemsPerStudent",
+                               "Number of Items (total)" = "NumberOfItems"))
+             )
       ),
       
       # Show a faceted graph
-      mainPanel(
-         img(src='hmh.png', align = "right"),
-         plotOutput("distPlot")
+      column(9,      #Use 9 of the 12 panels for the graph
+             img(src='hmh.png', align = "right"),
+             plotOutput("distPlot")
       )
    )
 )
