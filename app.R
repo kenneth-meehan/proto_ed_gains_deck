@@ -1,7 +1,4 @@
-# Prototype Shiny App for Ed/Learnosity Data
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
+# Pleliminary Prototype Shiny App for Ed Learnosity Data
 
 #Load libraries
 library(shiny)
@@ -10,31 +7,7 @@ library(ggplot2)
 library(lubridate)
 library(scales)
 
-#Read data
-# setwd("data")
-# files.to.read <- list.files(pattern="*.zip$") #generate list of .zip filenames
-# filesread <- data.frame(matrix(ncol=2, nrow=0))
-# colnames(filesread) <- c("Input File Name", "Records Read")
-# f <- 0  #index for dataframe to display input file names and record counts.
-# for (zipfile in files.to.read){
-#   f <- f+1
-#   csvfile <- gsub(".zip$", "", zipfile)  #csv inside zip file has almost the same name as zip file.
-#   df <- read.csv(unz(zipfile,csvfile), colClasses = "character")
-#   filesread[f,1] <- zipfile
-#   filesread[f,2] <- nrow(df)
-#   if (!exists("dfall")){        #create dfall first time through
-#     dfall <- read.table(text = "", #create a blank dfall dataframe with the proper columns
-#                         colClasses = "character",
-#                         col.names = colnames(df))
-#   }
-#   dfall <- rbind(dfall, df) #add current df to the bottom of dfall
-# }
-# df <- dfall
-# rm(dfall)
-# setwd("..")
-
-df <- read.csv("BrowardEd.csv", colClasses = "character")   #speedily read just unzipped broward data, for testing purposes
-
+df <- read.csv("data/FourDistrictsAnonSchoolAndClassNames.csv", colClasses = "character")
 
 #Set data types properly
 df$mo_yr_completed <- as.Date(floor_date(ymd_hms(df$date_completed),"month"))
@@ -57,22 +30,20 @@ ui <- fluidPage(
       sidebarPanel(
         selectInput(inputId = "district", label = strong("District"),
                     choices = sort(unique(df$district_name)),
-                    selected = "Broward Co School District"),
+                    selected = "District B"),
         checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
-        # selectInput(inputId = "extraStats", label = strong("Show Additional Stats?"),
-        #             choices = c("Number of Students", "Average Scores", "Average Durations in Seconds", "None"),
-        #             selected = "Number of Students"),
         radioButtons("extraStats", "Choose Annotation",
-                     c("Numbers of Students" = "NumbersOfStudents",
+                     c("Numbers of (active) Students" = "NumbersOfStudents",
                        "Average Scores" = "AvgScores",
                        "Average Durations (in seconds)" = "AvgDurations")),
         radioButtons("yaxis", "Vertical Axis Represents What?",
-                     c("Number of Items (total)" = "NumberOfItems",
-                       "Items per (active) Student" = "ItemsPerStudent"))
+                     c("Items per (active) Student" = "ItemsPerStudent",
+                       "Number of Items (total)" = "NumberOfItems"))
       ),
       
       # Show a faceted graph
       mainPanel(
+         img(src='hmh.png', align = "right"),
          plotOutput("distPlot")
       )
    )
@@ -124,15 +95,6 @@ server <- function(input, output) {
             facet_grid(school_name ~ .) +
             theme(strip.text.y = element_text(angle=0),
                   legend.position="none") + 
-            # geom_text(aes(label = nStudents, y = 0),
-            #           position = position_dodge(0.9),
-            #           vjust=0, hjust=0.5, color="blue") +
-            # geom_text(aes(label = avgScore, y = 0),
-            #           position = position_dodge(0.9),
-            #           vjust=0, hjust=0.5, color="blue") +
-            # geom_text(aes(label = avgDur, y = 0),
-            #           position = position_dodge(0.9),
-            #           vjust=0, hjust=0.5, color="blue")
             geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                       position = position_dodge(0.9),
                       vjust=0, hjust=0.5, color="blue")
@@ -176,15 +138,6 @@ server <- function(input, output) {
               theme(strip.text.y = element_text(angle=0),
                     axis.text.x = element_text(angle=90, vjust=0.5),
                     legend.position="none") +
-              # geom_text(aes(label = nStudents, y = 0),
-              #           position = position_dodge(0.9), size=3,
-              #           vjust=0, hjust=0.5, color="blue") +
-              # geom_text(aes(label = avgScore, y = 0),
-              #           position = position_dodge(0.9), size=3,
-              #           vjust=0, hjust=0.5, color="blue") +
-              # geom_text(aes(label = avgDur, y = 0), size=3,
-              #           position = position_dodge(0.9),
-              #           vjust=0, hjust=0.5, color="blue")
               geom_text(aes(label = eval(as.name(input$extraStats)), y = 0),
                         position = position_dodge(0.9),
                         vjust=0, hjust=0.5, color="blue")
