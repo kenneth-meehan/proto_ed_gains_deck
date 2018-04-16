@@ -44,7 +44,7 @@ ui <- fluidPage(
       ),
       
       # Show a faceted graph
-      column(9,      #Use 9 of the 12 panels for the graph
+      column(9,      #Use 9 of the 12 columns for the graph
              img(src='hmh.png', align = "right"),
              plotOutput("distPlot")
       )
