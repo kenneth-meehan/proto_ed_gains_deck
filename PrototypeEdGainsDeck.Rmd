@@ -1,7 +1,7 @@
 ---
 title: "Prototype Ed Gains Deck"
 author: "Ken Meehan"
-date: "Report Date: April 12, 2018"
+date: "Report Date: April 17, 2018"
 output: 
   pdf_document:
     latex_engine: xelatex
@@ -13,10 +13,8 @@ classoption: landscape
 ---
 
 ```{r chooseDistrict, echo=FALSE}
-#Set distict to report upon. Ultimaely, this choice would be incorporated into SQL query of remote database.
-district <- "Broward Co School District"
-#district <- "Charlotte-mecklenburg Sch Dist"
-#district <- "Sheboygan Area School District"
+#Set distict to report upon. Ultimately, this choice would be incorporated into SQL query of remote database.
+district <- "District B" #other options are District F, District L, and District S
 ```
 
 ```{r setup, include=FALSE}
@@ -49,7 +47,8 @@ library(grid)
 ##Read Data
 Each record represents one student answering one item on an Ed Assessment.
 
-```{r readZips, eval=TRUE, echo=FALSE, cache=TRUE}
+```{r readZips, eval=FALSE, echo=FALSE, cache=FALSE}
+#This is to read from full MAr 12 dataset stored in multiple zip files
 setwd("data")
 files.to.read <- list.files(pattern="*.zip$") #generate list of .zip filenames
 filesread <- data.frame(matrix(ncol=2, nrow=0))
@@ -73,6 +72,11 @@ df <- dfall
 rm(dfall)
 setwd("..")
 ```
+
+```{r readcsv, echo=FALSE}
+df <- read.csv("data/FourDistrictsAnonSchoolAndClassNames.csv", colClasses = "character")
+```
+
 
 ```{r define nice function, eval=TRUE, echo=FALSE}
 #Insert commas if five or more digits. 
