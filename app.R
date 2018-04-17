@@ -46,7 +46,7 @@ ui <- fluidPage(
       # Show a faceted graph
 
       column(9,      #Use 9 of the 12 panels for the graph
-             img(src='zombies_cprh.jpg', align = "right"),
+             img(src='hmh.png', align = "right"),
              plotOutput("distPlot")
       )
    )
