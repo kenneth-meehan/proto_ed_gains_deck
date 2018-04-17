@@ -33,10 +33,14 @@ ui <- fluidPage(
                             choices = sort(unique(df$district_name)),
                             selected = "District B"),
                 checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
-                radioButtons("extraStats", "Choose Annotation",
+                radioButtons("extraStats", "Annotations",
                              c("Numbers of (active) Students" = "NumbersOfStudents",
+                               "Number of Items (total)" = "NumberOfItems",
+                               "Items per (active) Student" = "ItemsPerStudent",
                                "Average Scores" = "AvgScores",
-                               "Average Durations (in seconds)" = "AvgDurations")),
+                               "Average Durations (in seconds)" = "AvgDurations",
+                               "None"="None"),
+                             selected="None"),
                 radioButtons("yaxis", "Vertical Axis Represents What?",
                              c("Items per (active) Student" = "ItemsPerStudent",
                                "Number of Items (total)" = "NumberOfItems"))
@@ -45,7 +49,7 @@ ui <- fluidPage(
       
       # Show a faceted graph
 
-      column(9,      #Use 9 of the 12 panels for the graph
+      column(9,      #Use 9 of the 12 columns for the graph
              img(src='hmh.png', align = "right"),
              plotOutput("distPlot")
       )
@@ -58,23 +62,24 @@ server <- function(input, output) {
      output$distPlot <- renderPlot({
        
        dist <- df %>% filter(district_name==input$district)
-       
+
        if(!input$gradesorno){
        
           BySchoolMonth <- dist %>%
             group_by(school_name, mo_yr_completed) %>%
             summarize(NumberOfItems=n(),
                       NumbersOfStudents=n_distinct(student_personal_refid),
-                      ItemsPerStudent=NumberOfItems/NumbersOfStudents,
+                      ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
                       AvgScores=round(100*sum(item_score)/sum(item_max_score)),
-                      AvgDurations=round(mean(time_in_secs)))
+                      AvgDurations=round(mean(time_in_secs)),
+                      None="")
           
             #Eliminate display of stats as user specifies
             if(input$extraStats=="None"){
               BySchoolMonth$NumbersOfStudents <- NA
               BySchoolMonth$AvgScores <- NA
               BySchoolMonth$AvgDurations <- NA
-            }
+              }
             if(input$extraStats=="NumbersOfStudents"){
               BySchoolMonth$AvgScores <- NA
               BySchoolMonth$AvgDurations <- NA
@@ -109,9 +114,10 @@ server <- function(input, output) {
             group_by(school_name, grade, mo_yr_completed) %>%
             summarize(NumberOfItems=n(),
                       NumbersOfStudents=n_distinct(student_personal_refid),
-                      ItemsPerStudent=NumberOfItems/NumbersOfStudents,
+                      ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
                       AvgScores=round(100*sum(item_score)/sum(item_max_score)),
-                      AvgDurations=round(mean(time_in_secs)))
+                      AvgDurations=round(mean(time_in_secs)),
+                      None="")
           #Eliminate display of stats as user specifies
           if(input$extraStats=="None"){
             BySchoolGradeMonth$NumbesOfStudents <- NA
@@ -141,7 +147,7 @@ server <- function(input, output) {
               theme(strip.text.y = element_text(angle=0),
                     axis.text.x = element_text(angle=90, vjust=0.5),
                     legend.position="none") +
-              geom_text(aes(label = eval(as.name(input$extraStats)), y = 0),
+              geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                         position = position_dodge(0.9),
                         vjust=0, hjust=0.5, color="blue")
         }
