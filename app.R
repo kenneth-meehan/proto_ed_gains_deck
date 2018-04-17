@@ -151,7 +151,7 @@ server <- function(input, output) {
                         position = position_dodge(0.9),
                         vjust=0, hjust=0.5, color="blue")
         }
-   }, height=800)
+   }, height=600)
 }
 
 # Run the application 
