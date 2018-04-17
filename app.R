@@ -19,7 +19,7 @@ df <- df[!is.na(df$grade),]   #exclude records without grade
 df$grade <- paste("Grade", df$grade)
 
 
-# Define UI for application that draws a facted graph
+# Define UI for application that draws a faceted graph
 ui <- fluidPage(
    
    # Application title
@@ -123,49 +123,7 @@ server <- function(input, output) {
              
              #Bind all the rows into a data frame:
              BySchoolMonth <- rbind.data.frame(BySchoolMonth, BySchool, ByMonth, Overall)
-                                  
-          
-          # #make marginals by grade
-          # avggrowthbygrade <- avggrowthbyschgr %>%
-          #   group_by(Grade) %>%
-          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
-          #             nstudents=sum(nstudents),
-          #             avg_rit_growth=totgrowth/nstudents)
-          # avggrowthbygrade$School <- "ALL"
-          # avggrowthbygrade <- avggrowthbygrade[c(5,1,3,4)]  #reorder columns to match those of avggrowthbyschgr
-          # 
-          # #make marginals by school
-          # avggrowthbyschool <- avggrowthbyschgr %>%
-          #   group_by(School) %>%
-          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
-          #             nstudents=sum(nstudents),
-          #             avg_rit_growth=totgrowth/nstudents)
-          # avggrowthbyschool$Grade <- "ALL"
-          # avggrowthbyschool <- avggrowthbyschool[c(1,5,3,4)]  #reorder columns to match those of avggrowthbyschgr
-          # 
-          # #make overall averages
-          # avggrowthall <- avggrowthbyschool %>%
-          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
-          #             nstudents=sum(nstudents),
-          #             avg_rit_growth=totgrowth/nstudents)
-          # avggrowthall$School <- "ALL"
-          # avggrowthall$Grade <- "ALL"
-          # avggrowthall <- avggrowthall[c(4,5,2,3)] #order columns to match those of avggrowthbyschgr
-          # 
-          # #Bind all the rows into a data frame:
-          # avggrowthbyschgr <- rbind.data.frame(avggrowthbyschgr, avggrowthbygrade, avggrowthbyschool, avggrowthall)
            }      
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
           
           
             #Eliminate display of stats as user specifies
