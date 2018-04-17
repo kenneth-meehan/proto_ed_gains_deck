@@ -62,6 +62,7 @@ server <- function(input, output) {
      output$distPlot <- renderPlot({
        
        dist <- df %>% filter(district_name==input$district)
+       mindate <- min(dist$mo_yr_completed)
 
        if(!input$gradesorno){
        
@@ -70,9 +71,102 @@ server <- function(input, output) {
             summarize(NumberOfItems=n(),
                       NumbersOfStudents=n_distinct(student_personal_refid),
                       ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
-                      AvgScores=round(100*sum(item_score)/sum(item_max_score)),
+                      sum_item_score=sum(item_score),
+                      sum_item_max_score=sum(item_max_score),
+                      AvgScores=round(100*sum_item_score/sum_item_max_score),
+                      sum_time_in_secs=sum(time_in_secs),
                       AvgDurations=round(mean(time_in_secs)),
                       None="")
+          
+           if(input$yaxis=="ItemsPerStudent"){   #Make marginal graphs
+             #make marginals by school
+             BySchool <- BySchoolMonth %>%
+               group_by(school_name) %>%
+               summarize(mo_yr_completed=mindate-months(1),   #Hope we can change label on x-axis from Aug 17 to ALL
+                         NumberOfItems=sum(NumberOfItems),
+                         NumbersOfStudents=sum(NumbersOfStudents),
+                         ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
+                         sum_item_score=sum(sum_item_score),
+                         sum_item_max_score=sum(sum_item_max_score),
+                         AvgScores=round(100*sum_item_score/sum_item_max_score),
+                         sum_time_in_secs=sum(sum_time_in_secs),
+                         AvgDurations=round(sum_time_in_secs/NumberOfItems),
+                         None="")
+             
+             ByMonth <- BySchoolMonth %>%
+               group_by(mo_yr_completed) %>%
+               summarize(school_name="ALL",
+                         NumberOfItems=sum(NumberOfItems),
+                         NumbersOfStudents=sum(NumbersOfStudents),
+                         ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
+                         sum_item_score=sum(sum_item_score),
+                         sum_item_max_score=sum(sum_item_max_score),
+                         AvgScores=round(100*sum_item_score/sum_item_max_score),
+                         sum_time_in_secs=sum(sum_time_in_secs),
+                         AvgDurations=round(sum_time_in_secs/NumberOfItems),
+                         None="")
+             
+             ByMonth <- ByMonth[c(2,1,3,4,5,6,7,8,9,10,11)] #order columns to match those of BySchoolMonth
+             
+             Overall <- ByMonth %>%
+               summarize(mo_yr_completed=mindate-months(1),   #Hope we can change label on x-axis from Aug 17 to ALL
+                         school_name="ALL",
+                         NumberOfItems=sum(NumberOfItems),
+                         NumbersOfStudents=sum(NumbersOfStudents),
+                         ItemsPerStudent=round(NumberOfItems/NumbersOfStudents),
+                         sum_item_score=sum(sum_item_score),
+                         sum_item_max_score=sum(sum_item_max_score),
+                         AvgScores=round(100*sum_item_score/sum_item_max_score),
+                         sum_time_in_secs=sum(sum_time_in_secs),
+                         AvgDurations=round(sum_time_in_secs/NumberOfItems),
+                         None="")
+             
+             #Bind all the rows into a data frame:
+             BySchoolMonth <- rbind.data.frame(BySchoolMonth, BySchool, ByMonth, Overall)
+                                  
+          
+          # #make marginals by grade
+          # avggrowthbygrade <- avggrowthbyschgr %>%
+          #   group_by(Grade) %>%
+          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
+          #             nstudents=sum(nstudents),
+          #             avg_rit_growth=totgrowth/nstudents)
+          # avggrowthbygrade$School <- "ALL"
+          # avggrowthbygrade <- avggrowthbygrade[c(5,1,3,4)]  #reorder columns to match those of avggrowthbyschgr
+          # 
+          # #make marginals by school
+          # avggrowthbyschool <- avggrowthbyschgr %>%
+          #   group_by(School) %>%
+          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
+          #             nstudents=sum(nstudents),
+          #             avg_rit_growth=totgrowth/nstudents)
+          # avggrowthbyschool$Grade <- "ALL"
+          # avggrowthbyschool <- avggrowthbyschool[c(1,5,3,4)]  #reorder columns to match those of avggrowthbyschgr
+          # 
+          # #make overall averages
+          # avggrowthall <- avggrowthbyschool %>%
+          #   summarize(totgrowth=sum(nstudents*avg_rit_growth),
+          #             nstudents=sum(nstudents),
+          #             avg_rit_growth=totgrowth/nstudents)
+          # avggrowthall$School <- "ALL"
+          # avggrowthall$Grade <- "ALL"
+          # avggrowthall <- avggrowthall[c(4,5,2,3)] #order columns to match those of avggrowthbyschgr
+          # 
+          # #Bind all the rows into a data frame:
+          # avggrowthbyschgr <- rbind.data.frame(avggrowthbyschgr, avggrowthbygrade, avggrowthbyschool, avggrowthall)
+           }      
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
           
             #Eliminate display of stats as user specifies
             if(input$extraStats=="None"){
