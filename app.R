@@ -128,26 +128,7 @@ server <- function(input, output) {
              #Bind all the rows into a data frame:
              BySchoolMonth <- rbind.data.frame(BySchoolMonth, BySchool, ByMonth, Overall)
            }      
-          
-            #Eliminate display of stats as user specifies
-            if(input$extraStats=="None"){
-              BySchoolMonth$NumbersOfStudents <- NA
-              BySchoolMonth$AvgScores <- NA
-              BySchoolMonth$AvgDurations <- NA
-              }
-            if(input$extraStats=="NumbersOfStudents"){
-              BySchoolMonth$AvgScores <- NA
-              BySchoolMonth$AvgDurations <- NA
-            }
-            if(input$extraStats=="AvgScores"){
-              BySchoolMonth$NumbersOfStudents <- NA
-              BySchoolMonth$AvgDurations <- NA
-            }
-            if(input$extraStats=="AvgDurations"){
-              BySchoolMonth$NumbersOfStudents <- NA
-              BySchoolMonth$AvgScores <- NA
-            }
-          
+
           #Change labels for Per-School marginals (stats over ALL time) from Aug 2017 to ALL:
           BySchoolMonth$mo_yr_completed <- as.factor(BySchoolMonth$mo_yr_completed)
           BySchoolMonth$mo_yr_completed <- substr(as.character(BySchoolMonth$mo_yr_completed),1,7)
@@ -239,30 +220,10 @@ server <- function(input, output) {
             BySchoolGradeMonth <- rbind.data.frame(BySchoolGradeMonth, BySchoolGrade, ByMonthGrade, Overall)
           }      
           
-          #Eliminate display of stats as user specifies
-          if(input$extraStats=="None"){
-            BySchoolGradeMonth$NumbesOfStudents <- NA
-            BySchoolGradeMonth$AvgScores <- NA
-            BySchoolGradeMonth$AvgDurations <- NA
-          }
-          if(input$extraStats=="NumbersOfStudents"){
-            BySchoolGradeMonth$AvgScores <- NA
-            BySchoolGradeMonth$AvgDurations <- NA
-          }
-          if(input$extraStats=="AvgScores"){
-            BySchoolGradeMonth$NumbersOfStudents <- NA
-            BySchoolGradeMonth$AvgDurations <- NA
-          }
-          if(input$extraStats=="AvgDurations"){
-            BySchoolGradeMonth$NumbersOfStudents <- NA
-            BySchoolGradeMonth$AvgScores <- NA
-          }
-          
           #Change labels for Per-School marginals (stats over ALL time) from Aug 2017 to ALL:
           BySchoolGradeMonth$mo_yr_completed <- as.factor(BySchoolGradeMonth$mo_yr_completed)
           BySchoolGradeMonth$mo_yr_completed <- substr(as.character(BySchoolGradeMonth$mo_yr_completed),1,7)
           BySchoolGradeMonth$mo_yr_completed[BySchoolGradeMonth$mo_yr_completed==mindateless1mostring] <- "ALL"
-          
           
           #Change labels for school_names so that ALL is displayed last:
           BySchoolGradeMonth$school_name <- as.factor(BySchoolGradeMonth$school_name)
