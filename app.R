@@ -83,47 +83,49 @@ server <- function(input, output) {
                       None="")
           
            if(input$yaxis=="ItemsPerStudent"){   #Make marginal graphs
+
              #make marginals by school
-             BySchool <- BySchoolMonth %>%
-               group_by(school_name) %>%
-               summarize(mo_yr_completed=mindateless1mo,
-                         NumbersOfItems=sum(NumbersOfItems),
-                         NumbersOfStudents=sum(NumbersOfStudents),
-                         ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                         sum_item_score=sum(sum_item_score),
-                         sum_item_max_score=sum(sum_item_max_score),
-                         AvgScores=round(100*sum_item_score/sum_item_max_score),
-                         sum_time_in_secs=sum(sum_time_in_secs),
-                         AvgDurations=round(sum_time_in_secs/NumbersOfItems),
-                         None="")
+             BySchool <- dist %>%
+                         group_by(school_name) %>%
+                         summarize(mo_yr_completed=mindateless1mo,
+                                   NumbersOfItems=n(),
+                                   NumbersOfStudents=n_distinct(student_personal_refid),
+                                   ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                   sum_item_score=sum(item_score),
+                                   sum_item_max_score=sum(item_max_score),
+                                   AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                   sum_time_in_secs=sum(time_in_secs),
+                                   AvgDurations=round(mean(time_in_secs)),
+                                   None="")
              
-             ByMonth <- BySchoolMonth %>%
-               group_by(mo_yr_completed) %>%
-               summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
-                         NumbersOfItems=sum(NumbersOfItems),
-                         NumbersOfStudents=sum(NumbersOfStudents),
-                         ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                         sum_item_score=sum(sum_item_score),
-                         sum_item_max_score=sum(sum_item_max_score),
-                         AvgScores=round(100*sum_item_score/sum_item_max_score),
-                         sum_time_in_secs=sum(sum_time_in_secs),
-                         AvgDurations=round(sum_time_in_secs/NumbersOfItems),
-                         None="")
-             
+             #make marginals by month
+             ByMonth <- dist %>%
+                         group_by(mo_yr_completed) %>%
+                         summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                                   NumbersOfItems=n(),
+                                   NumbersOfStudents=n_distinct(student_personal_refid),
+                                   ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                   sum_item_score=sum(item_score),
+                                   sum_item_max_score=sum(item_max_score),
+                                   AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                   sum_time_in_secs=sum(time_in_secs),
+                                   AvgDurations=round(mean(time_in_secs)),
+                                   None="")
              ByMonth <- ByMonth[c(2,1,3,4,5,6,7,8,9,10,11)] #order columns to match those of BySchoolMonth
              
-             Overall <- ByMonth %>%
-               summarize(mo_yr_completed=mindateless1mo, #temporarily put stats into earliest month - 1 month category
-                         school_name="ZZZ",
-                         NumbersOfItems=sum(NumbersOfItems),
-                         NumbersOfStudents=sum(NumbersOfStudents),
-                         ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                         sum_item_score=sum(sum_item_score),
-                         sum_item_max_score=sum(sum_item_max_score),
-                         AvgScores=round(100*sum_item_score/sum_item_max_score),
-                         sum_time_in_secs=sum(sum_time_in_secs),
-                         AvgDurations=round(sum_time_in_secs/NumbersOfItems),
-                         None="")
+             #make overall stats
+             Overall <- dist %>%
+                        summarize(mo_yr_completed=mindateless1mo, #temporarily put stats into earliest month - 1 month category
+                                  school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                                  NumbersOfItems=n(),
+                                  NumbersOfStudents=n_distinct(student_personal_refid),
+                                  ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                  sum_item_score=sum(item_score),
+                                  sum_item_max_score=sum(item_max_score),
+                                  AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                  sum_time_in_secs=sum(time_in_secs),
+                                  AvgDurations=round(mean(time_in_secs)),
+                                  None="")
              
              #Bind all the rows into a data frame:
              BySchoolMonth <- rbind.data.frame(BySchoolMonth, BySchool, ByMonth, Overall)
@@ -171,49 +173,50 @@ server <- function(input, output) {
                       None="")
           
           if(input$yaxis=="ItemsPerStudent"){   #Make marginal graphs
+            
             #make marginals by school
-            BySchoolGrade <- BySchoolGradeMonth %>%
+            BySchoolGrade <- dist %>%
               group_by(school_name, grade) %>%
               summarize(mo_yr_completed=mindateless1mo,
-                        NumbersOfItems=sum(NumbersOfItems),
-                        NumbersOfStudents=sum(NumbersOfStudents),
+                        NumbersOfItems=n(),
+                        NumbersOfStudents=n_distinct(student_personal_refid),
                         ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                        sum_item_score=sum(sum_item_score),
-                        sum_item_max_score=sum(sum_item_max_score),
+                        sum_item_score=sum(item_score),
+                        sum_item_max_score=sum(item_max_score),
                         AvgScores=round(100*sum_item_score/sum_item_max_score),
-                        sum_time_in_secs=sum(sum_time_in_secs),
+                        sum_time_in_secs=sum(time_in_secs),
                         AvgDurations=round(sum_time_in_secs/NumbersOfItems),
                         None="")
-            
-            ByMonthGrade <- BySchoolGradeMonth %>%
-              group_by(mo_yr_completed, grade) %>%
-              summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
-                        NumbersOfItems=sum(NumbersOfItems),
-                        NumbersOfStudents=sum(NumbersOfStudents),
-                        ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                        sum_item_score=sum(sum_item_score),
-                        sum_item_max_score=sum(sum_item_max_score),
-                        AvgScores=round(100*sum_item_score/sum_item_max_score),
-                        sum_time_in_secs=sum(sum_time_in_secs),
-                        AvgDurations=round(sum_time_in_secs/NumbersOfItems),
-                        None="")
-          
-           ByMonthGrade <- ByMonthGrade[c(3,2,1,4,5,6,7,8,9,10,11,12)] #order columns to match those of BySchoolGradeMonth
+       
+            #make marginals by month
+            ByMonthGrade <- dist %>%
+                            group_by(mo_yr_completed, grade) %>%
+                            summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                                      NumbersOfItems=n(),
+                                      NumbersOfStudents=n_distinct(student_personal_refid),
+                                      ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                      sum_item_score=sum(item_score),
+                                      sum_item_max_score=sum(item_max_score),
+                                      AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                      sum_time_in_secs=sum(time_in_secs),
+                                      AvgDurations=round(sum_time_in_secs/NumbersOfItems),
+                                      None="")
+            ByMonthGrade <- ByMonthGrade[c(3,2,1,4,5,6,7,8,9,10,11,12)] #order columns to match those of BySchoolGradeMonth
 
-           Overall <- ByMonthGrade %>%
+            #make overall stats
+            Overall <- dist %>%
               group_by(grade) %>%
               summarize(mo_yr_completed=mindateless1mo, #temporarily put stats into earliest month - 1 month category
                         school_name="ZZZ",
-                        NumbersOfItems=sum(NumbersOfItems),
-                        NumbersOfStudents=sum(NumbersOfStudents),
+                        NumbersOfItems=n(),
+                        NumbersOfStudents=n_distinct(student_personal_refid),
                         ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
-                        sum_item_score=sum(sum_item_score),
-                        sum_item_max_score=sum(sum_item_max_score),
+                        sum_item_score=sum(item_score),
+                        sum_item_max_score=sum(item_max_score),
                         AvgScores=round(100*sum_item_score/sum_item_max_score),
-                        sum_time_in_secs=sum(sum_time_in_secs),
+                        sum_time_in_secs=sum(time_in_secs),
                         AvgDurations=round(sum_time_in_secs/NumbersOfItems),
                         None="")
-
             Overall <- Overall[c(3,1,2,4,5,6,7,8,9,10,11,12)] #order columns to match those of BySchoolGradeMonth
             
             #Bind all the rows into a data frame:
