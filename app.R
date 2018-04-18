@@ -43,7 +43,7 @@ ui <- fluidPage(
                              selected="None"),
                 radioButtons("yaxis", "Vertical Axis",
                              c("Items per (active) Student" = "ItemsPerStudent",
-                               "Number of Items (total)" = "NumbersOfItems"))
+                               "Numbers of Items (total)" = "NumbersOfItems"))
              )
       ),
       
