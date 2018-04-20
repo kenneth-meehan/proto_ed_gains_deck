@@ -19,52 +19,49 @@ server <- function(input, output, session) {
     output$bogusPlot <- renderPlot({
 
       if(!is.null(input$dims)){
-        
         if(!is.na(input$dims[1]) & input$dims[1]=="school" &
            !is.na(input$dims[2]) & input$dims[2]=="month" &
            !is.na(input$dims[3]) & input$dims[3]=="grade"){
-        msg <- "(S,M,G) dimensions chosen!"
+        msg <- "school, month, grade chosen"
         ggplot(mtcars, aes(wt,wt)) +
           annotate("text", x=3, y=3, label=msg, size=20, color="red")
-      
         }else{
-          
           if(!is.na(input$dims[1]) & input$dims[1]=="month" &
              !is.na(input$dims[2]) & input$dims[2]=="grade"){
-          msg <- "(M,G) dimensions chosen!"
+          msg <- "month, grade chosen"
           ggplot(mtcars, aes(wt,wt)) +
             annotate("text", x=3, y=3, label=msg, size=20, color="red")
           }else{
             
             if(!is.na(input$dims[1]) & input$dims[1]=="school" &
                !is.na(input$dims[2]) & input$dims[2]=="grade"){
-              msg <- "(S,G) dimensions chosen!"
+              msg <- "school, grade chosen"
               ggplot(mtcars, aes(wt,wt)) +
                 annotate("text", x=3, y=3, label=msg, size=20, color="red")
             }else{
               
               if(!is.na(input$dims[1]) & input$dims[1]=="school" &
                  !is.na(input$dims[2]) & input$dims[2]=="month"){
-                msg <- "(S,M) dimensions chosen!"
+                msg <- "school, month chosen"
                 ggplot(mtcars, aes(wt,wt)) +
                   annotate("text", x=3, y=3, label=msg, size=20, color="red")
               }else{
                 if(!is.na(input$dims[1]) & input$dims[1]=="school"){
-                  msg <- "(S) dimension chosen!"
+                  msg <- "school chosen"
                   ggplot(mtcars, aes(wt,wt)) +
                     annotate("text", x=3, y=3, label=msg, size=20, color="red") 
                 }else{
                   if(!is.na(input$dims[1]) & input$dims[1]=="month"){
-                    msg <- "(M) dimension chosen!"
+                    msg <- "month chosen"
                     ggplot(mtcars, aes(wt,wt)) +
                       annotate("text", x=3, y=3, label=msg, size=20, color="red") 
                   }else{
                     if(!is.na(input$dims[1]) & input$dims[1]=="grade"){
-                      msg <- "(G) dimension chosen!"
+                      msg <- "grade chosen"
                       ggplot(mtcars, aes(wt,wt)) +
                         annotate("text", x=3, y=3, label=msg, size=20, color="red") 
                     }else{
-                      msg <- "No dimensions chosen!"
+                      msg <- "nothing chosen 1"
                       ggplot(mtcars, aes(wt,wt)) +
                         annotate("text", x=3, y=3, label=msg, size=20, color="red") 
                     }
@@ -73,14 +70,12 @@ server <- function(input, output, session) {
               }
             }
           }
-          
-      }}else{
-        
-        msg <- "No dimensions chosen!"
+        } 
+      }else{
+        msg <- "nothing chosen 2"
         ggplot(mtcars, aes(wt,wt)) +
           annotate("text", x=3, y=3, label=msg, size=20, color="red")
       }  
-        
     })
 }
   
