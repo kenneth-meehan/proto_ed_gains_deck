@@ -53,8 +53,7 @@ ui <- fluidPage(
              )
       ),
       
-      # Show a faceted graph
-
+      # Show the graph
       column(9,      #Use 9 of the 12 columns for the graph
              img(src='hmh.png', align = "right"),
              plotOutput("distPlot")
@@ -73,9 +72,7 @@ server <- function(input, output) {
        #Use this as placeholder for ALL category, to hold stats for each school (and district) over all time.
        mindateless1mo <- min(dist$mo_yr_completed) - months(1)
        mindateless1mostring <- substr(as.character(mindateless1mo),1,7)
-       
-    
-       output$distPlot <- renderPlot({
+
          
          if(is.null(input$dims)){
            msg <- "No dimensions chosen."
@@ -273,12 +270,61 @@ server <- function(input, output) {
                     #END SCHOOL MONTH CASE
                  }else{
                    if(!is.na(input$dims[1]) & input$dims[1]=="school_name"){
-                     msg <- "school"
-                     ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+                      #START SCHOOL CASE
+                      BySchool <- dist %>%
+                        group_by(school_name) %>%
+                        summarize(mo_yr_completed=mindateless1mo,
+                                  NumbersOfItems=n(),
+                                  NumbersOfStudents=n_distinct(student_personal_refid),
+                                  ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                  sum_item_score=sum(item_score),
+                                  sum_item_max_score=sum(item_max_score),
+                                  AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                  sum_time_in_secs=sum(time_in_secs),
+                                  AvgDurations=round(mean(time_in_secs)),
+                                  None="")
+                       #Make the graph
+                       ggplot(BySchool, aes(x=school_name, y=eval(as.name(input$yaxis)))) +
+                         geom_bar(stat="identity", fill='goldenrod') +
+                         scale_y_continuous(labels=comma) +
+                         labs(title="Ed Learnosity Items by School",
+                              subtitle=paste("Blue Annotations:",input$extraStats),
+                              x="", y=as.name(input$yaxis)) +
+                         theme(strip.text.y = element_text(angle=0),
+                               legend.position="none") +
+                         geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                                   position = position_dodge(0.9),
+                                   vjust=0, hjust=0.5, color="blue")
+                      #END SCHOOL CASE
                    }else{
                      if(!is.na(input$dims[1]) & input$dims[1]=="mo_yr_completed"){
-                       msg <- "month"
-                       ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+                       #START MONTH CASE
+                       ByMonth <- dist %>%
+                         group_by(mo_yr_completed) %>%
+                         summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                                   NumbersOfItems=n(),
+                                   NumbersOfStudents=n_distinct(student_personal_refid),
+                                   ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                   sum_item_score=sum(item_score),
+                                   sum_item_max_score=sum(item_max_score),
+                                   AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                   sum_time_in_secs=sum(time_in_secs),
+                                   AvgDurations=round(mean(time_in_secs)),
+                                   None="")
+                        #Make the graph
+                        ggplot(ByMonth, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
+                          geom_bar(stat="identity", fill='goldenrod') +
+                          scale_x_date(date_breaks = "1 month", date_labels = "%Y-%m") +
+                          scale_y_continuous(labels=comma) +
+                          labs(title="Ed Learnosity Items by Month",
+                               subtitle=paste("Blue Annotations:",input$extraStats),
+                               x="", y=as.name(input$yaxis)) +
+                          theme(strip.text.y = element_text(angle=0),
+                                legend.position="none") +
+                          geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                                    position = position_dodge(0.9),
+                                    vjust=0, hjust=0.5, color="blue")
+                       #END MONTH CASE
                      }else{
                        if(!is.na(input$dims[1]) & input$dims[1]=="grade"){
                          msg <- "grade"
@@ -292,7 +338,6 @@ server <- function(input, output) {
            }
          }
        }, height=600)
-   })
 }
 
 # Run the application 
