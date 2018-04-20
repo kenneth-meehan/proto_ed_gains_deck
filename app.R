@@ -33,7 +33,7 @@ ui <- fluidPage(
                             choices = sort(unique(df$district_name)),
                             selected = "District B"),
                 checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
-                checkboxGroupInput("dim", "Dimensions",
+                checkboxGroupInput("dims", "Dimensions",
                                    c("School" = "school_name",
                                      "Month" = "mo_yr_completed",
                                      "Grade" = "grade"),
@@ -73,9 +73,20 @@ server <- function(input, output) {
        #Use this as placeholder for ALL category, to hold stats for each school (and district) over all time.
        mindateless1mo <- min(dist$mo_yr_completed) - months(1)
        mindateless1mostring <- substr(as.character(mindateless1mo),1,7)
-
-       if(!input$gradesorno){
        
+       
+       
+       if(!is.null(input$dims)){
+       
+       
+       
+       
+       
+       
+       
+
+       if(input$dims[1]=="school_name" & input$dims[2]=="mo_yr_completed" & is.na(input$dims[3])){
+
           BySchoolMonth <- dist %>%
             group_by(school_name, mo_yr_completed) %>%
             summarize(NumbersOfItems=n(),
@@ -163,8 +174,9 @@ server <- function(input, output) {
             geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                       position = position_dodge(0.9),
                       vjust=0, hjust=0.5, color="blue")
-
-       }else{
+       }
+       
+      else if(length(input$dims)==3){
          
           BySchoolGradeMonth <- dist %>%
             group_by(school_name, grade, mo_yr_completed) %>%
@@ -255,7 +267,19 @@ server <- function(input, output) {
               geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                         position = position_dodge(0.9),
                         vjust=0, hjust=0.5, color="blue")
-        }
+      }
+         
+       }else{
+         msg <- "No dimensions chosen!"
+         ggplot(mtcars, aes(wt,wt)) +
+           annotate("text", x=3, y=3, label=msg, size=20, color="red") +
+           theme(axis.title=element_blank(),
+                 axis.text =element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.background=element_blank())
+           
+       }   
+         
    }, height=600)
 }
 
