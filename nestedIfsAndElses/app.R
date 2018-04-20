@@ -18,64 +18,48 @@ ui <- fluidPage(
 server <- function(input, output, session) {
     output$bogusPlot <- renderPlot({
 
-      if(!is.null(input$dims)){
+      if(is.null(input$dims)){
+        msg <- "nothing"
+      }else{
         if(!is.na(input$dims[1]) & input$dims[1]=="school" &
            !is.na(input$dims[2]) & input$dims[2]=="month" &
            !is.na(input$dims[3]) & input$dims[3]=="grade"){
-        msg <- "school, month, grade chosen"
-        ggplot(mtcars, aes(wt,wt)) +
-          annotate("text", x=3, y=3, label=msg, size=20, color="red")
+          msg <- "school, month, grade"
         }else{
           if(!is.na(input$dims[1]) & input$dims[1]=="month" &
              !is.na(input$dims[2]) & input$dims[2]=="grade"){
-          msg <- "month, grade chosen"
-          ggplot(mtcars, aes(wt,wt)) +
-            annotate("text", x=3, y=3, label=msg, size=20, color="red")
+            msg <-  "month, grade"
           }else{
-            
             if(!is.na(input$dims[1]) & input$dims[1]=="school" &
                !is.na(input$dims[2]) & input$dims[2]=="grade"){
-              msg <- "school, grade chosen"
-              ggplot(mtcars, aes(wt,wt)) +
-                annotate("text", x=3, y=3, label=msg, size=20, color="red")
+              msg <- "school, grade"
             }else{
-              
               if(!is.na(input$dims[1]) & input$dims[1]=="school" &
                  !is.na(input$dims[2]) & input$dims[2]=="month"){
-                msg <- "school, month chosen"
-                ggplot(mtcars, aes(wt,wt)) +
-                  annotate("text", x=3, y=3, label=msg, size=20, color="red")
+                msg <- "school, month"
               }else{
                 if(!is.na(input$dims[1]) & input$dims[1]=="school"){
-                  msg <- "school chosen"
-                  ggplot(mtcars, aes(wt,wt)) +
-                    annotate("text", x=3, y=3, label=msg, size=20, color="red") 
+                  msg <- "school" 
                 }else{
                   if(!is.na(input$dims[1]) & input$dims[1]=="month"){
-                    msg <- "month chosen"
-                    ggplot(mtcars, aes(wt,wt)) +
-                      annotate("text", x=3, y=3, label=msg, size=20, color="red") 
+                    msg <- "month" 
                   }else{
                     if(!is.na(input$dims[1]) & input$dims[1]=="grade"){
-                      msg <- "grade chosen"
-                      ggplot(mtcars, aes(wt,wt)) +
-                        annotate("text", x=3, y=3, label=msg, size=20, color="red") 
-                    }else{
-                      msg <- "nothing chosen 1"
-                      ggplot(mtcars, aes(wt,wt)) +
-                        annotate("text", x=3, y=3, label=msg, size=20, color="red") 
+                      msg <- "grade" 
                     }
                   }
                 }
               }
             }
           }
-        } 
-      }else{
-        msg <- "nothing chosen 2"
-        ggplot(mtcars, aes(wt,wt)) +
-          annotate("text", x=3, y=3, label=msg, size=20, color="red")
-      }  
+        }
+      }
+      ggplot(mtcars, aes(wt,wt)) +
+        theme(axis.title=element_blank(),
+              axis.text =element_blank(),
+              axis.ticks=element_blank(),
+              panel.background=element_blank()) +
+        annotate("text", x=3, y=3, label=msg, size=30, color="red")
     })
 }
   
