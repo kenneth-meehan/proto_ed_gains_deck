@@ -78,7 +78,15 @@ server <- function(input, output) {
        
        if(!is.null(input$dims)){
        
-       
+         case_when(
+           input$dims[1]=="school_name" & input$dims[2]=="mo_yr_completed" & input$dims[3]=="grade" ~ "Thirty",
+           input$dims[1]=="3" & input$dims[2]=="5" ~ "Fifteen",
+           input$dims[1]=="2" &                        input$dims[2]=="5" ~ "Ten",
+           input$dims[1]=="2" & input$dims[2]=="3"                        ~ "Six",
+           input$dims[1]=="5" ~ "Five",
+           input$dims[1]=="3"                        ~ "Three",
+           input$dims[1]=="2"                                               ~ "Two"
+         )
        
        
        
@@ -277,7 +285,6 @@ server <- function(input, output) {
                  axis.text =element_blank(),
                  axis.ticks=element_blank(),
                  panel.background=element_blank())
-           
        }   
          
    }, height=600)
