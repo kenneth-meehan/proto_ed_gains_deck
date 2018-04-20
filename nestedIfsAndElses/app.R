@@ -1,9 +1,8 @@
-#Figure out how to use the checkBoxGroupInput function with dplyr's case_when function.
+#Figure out how to use the checkBoxGroupInput function with nested if else.
 #Apply this then to user choices of dimensions in prototype ed gains deck to
 #draw different graphs depending on user's choice of dimensions.
 #Need spearate if statement for case when no checkboxes are checked!
 
-library(dplyr)
 library(ggplot2)
   
 ui <- fluidPage(
