@@ -176,8 +176,92 @@ server <- function(input, output) {
              }else{
                if(!is.na(input$dims[1]) & input$dims[1]=="school_name" &
                   !is.na(input$dims[2]) & input$dims[2]=="grade"){
-                 msg <- "school, grade"
-                 ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+                 #START SCHOOL GRADE CASE
+                 BySchoolGrade <- dist %>%
+                   group_by(school_name, grade) %>%
+                   summarize(NumbersOfItems=n(),
+                             NumbersOfStudents=n_distinct(student_personal_refid),
+                             ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                             sum_item_score=sum(item_score),
+                             sum_item_max_score=sum(item_max_score),
+                             AvgScores=round(100*sum_item_score/sum_item_max_score),
+                             sum_time_in_secs=sum(time_in_secs),
+                             AvgDurations=round(mean(time_in_secs)),
+                             None="")
+                 
+                 if(input$yaxis=="ItemsPerStudent"){   #Make marginal graphs
+                   #make marginals by school
+                   BySchool <- dist %>%
+                     group_by(school_name) %>%
+                     summarize(grade="Grade 20",  #surely higher than 12
+                               NumbersOfItems=n(),
+                               NumbersOfStudents=n_distinct(student_personal_refid),
+                               ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                               sum_item_score=sum(item_score),
+                               sum_item_max_score=sum(item_max_score),
+                               AvgScores=round(100*sum_item_score/sum_item_max_score),
+                               sum_time_in_secs=sum(time_in_secs),
+                               AvgDurations=round(mean(time_in_secs)),
+                               None="")
+                   #make marginals by month
+                   ByGrade <- dist %>%
+                     group_by(grade) %>%
+                     summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                               NumbersOfItems=n(),
+                               NumbersOfStudents=n_distinct(student_personal_refid),
+                               ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                               sum_item_score=sum(item_score),
+                               sum_item_max_score=sum(item_max_score),
+                               AvgScores=round(100*sum_item_score/sum_item_max_score),
+                               sum_time_in_secs=sum(time_in_secs),
+                               AvgDurations=round(mean(time_in_secs)),
+                               None="")
+                   ByGrade <- ByGrade[c(2,1,3,4,5,6,7,8,9,10,11)] #order columns to match those of BySchoolGrade
+                   #make overall stats
+                   Overall <- dist %>%
+                     summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
+                               grade="Grade 20",
+                               NumbersOfItems=n(),
+                               NumbersOfStudents=n_distinct(student_personal_refid),
+                               ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                               sum_item_score=sum(item_score),
+                               sum_item_max_score=sum(item_max_score),
+                               AvgScores=round(100*sum_item_score/sum_item_max_score),
+                               sum_time_in_secs=sum(time_in_secs),
+                               AvgDurations=round(mean(time_in_secs)),
+                               None="")
+                   #Bind all the rows into a data frame:
+                   BySchoolGrade <- rbind.data.frame(BySchoolGrade, BySchool, ByGrade, Overall)
+                 }
+                 
+                 #Change labels for grades so that ALL is displayed last:
+                 BySchoolGrade$grade <- as.factor(BySchoolGrade$grade)
+                 BySchoolGrade$grade <- as.character(BySchoolGrade$grade)
+                 BySchoolGrade <- arrange(BySchoolGrade, grade)   #to ensure that Grade 20 comes last
+                 BySchoolGrade$grade <- as.factor(BySchoolGrade$grade)
+                 levels(BySchoolGrade$grade)[levels(BySchoolGrade$grade)=="Grade 20"] <- "ALL"
+                 
+                 #Change labels for school_names so that ALL is displayed last:
+                 BySchoolGrade$school_name <- as.factor(BySchoolGrade$school_name)
+                 BySchoolGrade$school_name <- as.character(BySchoolGrade$school_name)
+                 BySchoolGrade <- arrange(BySchoolGrade, school_name)   #to ensure that ZZZ comes last
+                 BySchoolGrade$school_name <- as.factor(BySchoolGrade$school_name)
+                 levels(BySchoolGrade$school_name)[levels(BySchoolGrade$school_name)=="ZZZ"] <- "ALL"
+                 
+                 #Make the graph
+                 ggplot(BySchoolGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
+                   geom_bar(stat="identity", fill='goldenrod') +
+                   scale_y_continuous(labels=comma) +
+                   labs(title="Ed Learnosity Items by School and Grade",
+                        subtitle=paste("Blue Annotations:",input$extraStats),
+                        x="", y=as.name(input$yaxis)) +
+                   facet_grid(school_name ~ .) +
+                   theme(strip.text.y = element_text(angle=0),
+                         legend.position="none") +
+                   geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                             position = position_dodge(0.9),
+                             vjust=0, hjust=0.5, color="blue")
+                 #END SCHOOL GRADE CASE
                }else{
                  if(!is.na(input$dims[1]) & input$dims[1]=="school_name" &
                     !is.na(input$dims[2]) & input$dims[2]=="mo_yr_completed"){
@@ -327,8 +411,32 @@ server <- function(input, output) {
                        #END MONTH CASE
                      }else{
                        if(!is.na(input$dims[1]) & input$dims[1]=="grade"){
-                         msg <- "grade"
-                         ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+                         #START GRADE CASE
+                         ByGrade <- dist %>%
+                           group_by(grade) %>%
+                           summarize(mo_yr_completed=mindateless1mo,
+                                     NumbersOfItems=n(),
+                                     NumbersOfStudents=n_distinct(student_personal_refid),
+                                     ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                                     sum_item_score=sum(item_score),
+                                     sum_item_max_score=sum(item_max_score),
+                                     AvgScores=round(100*sum_item_score/sum_item_max_score),
+                                     sum_time_in_secs=sum(time_in_secs),
+                                     AvgDurations=round(mean(time_in_secs)),
+                                     None="")
+                         #Make the graph
+                         ggplot(ByGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
+                           geom_bar(stat="identity", fill='goldenrod') +
+                           scale_y_continuous(labels=comma) +
+                           labs(title="Ed Learnosity Items by Grade",
+                                subtitle=paste("Blue Annotations:",input$extraStats),
+                                x="", y=as.name(input$yaxis)) +
+                           theme(strip.text.y = element_text(angle=0),
+                                 legend.position="none") +
+                           geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                                     position = position_dodge(0.9),
+                                     vjust=0, hjust=0.5, color="blue")
+                         #END GRADE CASE
                        }
                      }
                    }
