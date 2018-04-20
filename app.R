@@ -9,7 +9,7 @@ library(scales)
 
 df <- read.csv("data/FourDistrictsAnonSchoolAndClassNames.csv", colClasses = "character")
 
-#Set data types properly
+#Set data types properly etc
 df$mo_yr_completed <- as.Date(floor_date(ymd_hms(df$date_completed),"month"))
 df$item_score <- as.integer(df$item_score)
 df$item_max_score <- as.integer(df$item_max_score)
@@ -17,6 +17,7 @@ df$time_in_secs <- as.integer(df$time_in_secs)
 df <- df[nchar(df$grade)>0,]  #exclude records with grade of ""
 df <- df[!is.na(df$grade),]   #exclude records without grade
 df$grade <- paste("Grade", df$grade)
+colr <- 'goldenrod'
 
 
 # Define UI for application that draws a faceted graph
@@ -32,12 +33,11 @@ ui <- fluidPage(
                 selectInput(inputId = "district", label = strong("District"),
                             choices = sort(unique(df$district_name)),
                             selected = "District B"),
-                checkboxInput("gradesorno", "Show grade-level detail?", FALSE),
                 checkboxGroupInput("dims", "Dimensions",
                                    c("School" = "school_name",
                                      "Month" = "mo_yr_completed",
                                      "Grade" = "grade"),
-                                   selected=c("school_name", "mo_yr_completed"),
+                                   selected=c("mo_yr_completed"),
                                    inline=TRUE),
                 radioButtons("extraStats", "Annotation",
                              c("Numbers of (active) Students" = "NumbersOfStudents",
@@ -75,12 +75,38 @@ server <- function(input, output) {
 
          
          if(is.null(input$dims)){
-           msg <- "No dimensions chosen."
-           ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+           #START OF OVERALL CASE
+           #make overall stats
+           Overall <- dist %>%
+             summarize(NumbersOfItems=n(),
+                       NumbersOfStudents=n_distinct(student_personal_refid),
+                       ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                       sum_item_score=sum(item_score),
+                       sum_item_max_score=sum(item_max_score),
+                       AvgScores=round(100*sum_item_score/sum_item_max_score),
+                       sum_time_in_secs=sum(time_in_secs),
+                       AvgDurations=round(mean(time_in_secs)),
+                       None="")
+           #make graph
+           ggplot(Overall, aes(x="", y=eval(as.name(input$yaxis)))) +
+             geom_bar(stat="identity", fill=colr) +
+             scale_y_continuous(labels=comma) +
+             labs(title="Ed Learnosity Items District-Wide",
+                  subtitle=paste("Blue Annotations:",input$extraStats),
+                  x="", y=as.name(input$yaxis)) +
+             theme(strip.text.y = element_text(angle=0),
+                   legend.position="none") +
+             geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                       position = position_dodge(0.9),
+                       vjust=0, hjust=0.5, color="blue")
+           #END OF OVERALL CASE
+           
          }else{
            if(!is.na(input$dims[1]) & input$dims[1]=="school_name" &
               !is.na(input$dims[2]) & input$dims[2]=="mo_yr_completed" &
               !is.na(input$dims[3]) & input$dims[3]=="grade"){
+              
+              #START OF SCHOOL MONTH GRADE CASE
               BySchoolGradeMonth <- dist %>%
                 group_by(school_name, grade, mo_yr_completed) %>%
                 summarize(NumbersOfItems=n(),
@@ -155,7 +181,7 @@ server <- function(input, output) {
 
               #Make the graph
               ggplot(BySchoolGradeMonth, aes(x=grade, y=eval(as.name(input$yaxis)))) +
-                     geom_bar(stat="identity", fill='goldenrod') +
+                     geom_bar(stat="identity", fill=colr) +
                      scale_y_continuous(labels=comma) +
                      labs(title="Ed Learnosity Items by School, Month, and Grade",
                           subtitle=paste("Blue Annotations:",input$extraStats),
@@ -171,12 +197,96 @@ server <- function(input, output) {
            }else{
              if(!is.na(input$dims[1]) & input$dims[1]=="mo_yr_completed" &
                 !is.na(input$dims[2]) & input$dims[2]=="grade"){
-               msg <-  "month, grade"
-               ggplot(mtcars, aes(wt,wt)) + annotate("text", x=3, y=3, label=msg, size=30, color="red")
+
+               #START OF MONTH GRADE CASE
+               ByMonthGrade <- dist %>%
+                 group_by(mo_yr_completed, grade) %>%
+                 summarize(NumbersOfItems=n(),
+                           NumbersOfStudents=n_distinct(student_personal_refid),
+                           ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                           sum_item_score=sum(item_score),
+                           sum_item_max_score=sum(item_max_score),
+                           AvgScores=round(100*sum_item_score/sum_item_max_score),
+                           sum_time_in_secs=sum(time_in_secs),
+                           AvgDurations=round(mean(time_in_secs)),
+                           None="")
+               
+               if(input$yaxis=="ItemsPerStudent"){   #Make marginal graphs
+                 #make marginals by month
+                 ByMonth <- dist %>%
+                   group_by(mo_yr_completed) %>%
+                   summarize(grade="Grade 20",  #surely higher than 12
+                             NumbersOfItems=n(),
+                             NumbersOfStudents=n_distinct(student_personal_refid),
+                             ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                             sum_item_score=sum(item_score),
+                             sum_item_max_score=sum(item_max_score),
+                             AvgScores=round(100*sum_item_score/sum_item_max_score),
+                             sum_time_in_secs=sum(time_in_secs),
+                             AvgDurations=round(mean(time_in_secs)),
+                             None="")
+                 #make marginals by grade
+                 ByGrade <- dist %>%
+                   group_by(grade) %>%
+                   summarize(mo_yr_completed=mindateless1mo,
+                             NumbersOfItems=n(),
+                             NumbersOfStudents=n_distinct(student_personal_refid),
+                             ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                             sum_item_score=sum(item_score),
+                             sum_item_max_score=sum(item_max_score),
+                             AvgScores=round(100*sum_item_score/sum_item_max_score),
+                             sum_time_in_secs=sum(time_in_secs),
+                             AvgDurations=round(mean(time_in_secs)),
+                             None="")
+                 ByGrade <- ByGrade[c(2,1,3,4,5,6,7,8,9,10,11)] #order columns to match those of ByMonthGrade
+                 #make overall stats
+                 Overall <- dist %>%
+                   summarize(grade="Grade 20",
+                             mo_yr_completed=mindateless1mo,
+                             NumbersOfItems=n(),
+                             NumbersOfStudents=n_distinct(student_personal_refid),
+                             ItemsPerStudent=round(NumbersOfItems/NumbersOfStudents),
+                             sum_item_score=sum(item_score),
+                             sum_item_max_score=sum(item_max_score),
+                             AvgScores=round(100*sum_item_score/sum_item_max_score),
+                             sum_time_in_secs=sum(time_in_secs),
+                             AvgDurations=round(mean(time_in_secs)),
+                             None="")
+                 #Bind all the rows into a data frame:
+                 ByMonthGrade <- rbind.data.frame(ByMonthGrade, ByMonth, ByGrade, Overall)
+               }
+               
+               #Change labels for grades so that ALL is displayed last:
+               ByMonthGrade$grade <- as.factor(ByMonthGrade$grade)
+               ByMonthGrade$grade <- as.character(ByMonthGrade$grade)
+               ByMonthGrade <- arrange(ByMonthGrade, grade)   #to ensure that Grade 20 comes last
+               ByMonthGrade$grade <- as.factor(ByMonthGrade$grade)
+               levels(ByMonthGrade$grade)[levels(ByMonthGrade$grade)=="Grade 20"] <- "ALL"
+               
+               #Change labels for Per-Grade marginals (stats over ALL time) from Aug 2017 to ALL:
+               ByMonthGrade$mo_yr_completed <- as.factor(ByMonthGrade$mo_yr_completed)
+               ByMonthGrade$mo_yr_completed <- substr(as.character(ByMonthGrade$mo_yr_completed),1,7)
+               ByMonthGrade$mo_yr_completed[ByMonthGrade$mo_yr_completed==mindateless1mostring] <- "ALL"
+               
+               #Make the graph
+               ggplot(ByMonthGrade, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
+                 geom_bar(stat="identity", fill=colr) +
+                 scale_y_continuous(labels=comma) +
+                 labs(title="Ed Learnosity Items by Month and Grade",
+                      subtitle=paste("Blue Annotations:",input$extraStats),
+                      x="", y=as.name(input$yaxis)) +
+                 facet_grid(grade ~ .) +
+                 theme(strip.text.y = element_text(angle=0),
+                       legend.position="none") +
+                 geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                           position = position_dodge(0.9),
+                           vjust=0, hjust=0.5, color="blue")
+               #END OF MONTH GRADE CASE
+               
              }else{
                if(!is.na(input$dims[1]) & input$dims[1]=="school_name" &
                   !is.na(input$dims[2]) & input$dims[2]=="grade"){
-                 #START SCHOOL GRADE CASE
+                 #START OF SCHOOL GRADE CASE
                  BySchoolGrade <- dist %>%
                    group_by(school_name, grade) %>%
                    summarize(NumbersOfItems=n(),
@@ -203,7 +313,7 @@ server <- function(input, output) {
                                sum_time_in_secs=sum(time_in_secs),
                                AvgDurations=round(mean(time_in_secs)),
                                None="")
-                   #make marginals by month
+                   #make marginals by grade
                    ByGrade <- dist %>%
                      group_by(grade) %>%
                      summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
@@ -250,7 +360,7 @@ server <- function(input, output) {
                  
                  #Make the graph
                  ggplot(BySchoolGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
-                   geom_bar(stat="identity", fill='goldenrod') +
+                   geom_bar(stat="identity", fill=colr) +
                    scale_y_continuous(labels=comma) +
                    labs(title="Ed Learnosity Items by School and Grade",
                         subtitle=paste("Blue Annotations:",input$extraStats),
@@ -261,12 +371,11 @@ server <- function(input, output) {
                    geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                              position = position_dodge(0.9),
                              vjust=0, hjust=0.5, color="blue")
-                 #END SCHOOL GRADE CASE
+                 #END OF SCHOOL GRADE CASE
                }else{
                  if(!is.na(input$dims[1]) & input$dims[1]=="school_name" &
                     !is.na(input$dims[2]) & input$dims[2]=="mo_yr_completed"){
-
-                   #START SCHOOL MONTH CASE
+                   #START OF SCHOOL MONTH CASE
                    BySchoolMonth <- dist %>%
                      group_by(school_name, mo_yr_completed) %>%
                      summarize(NumbersOfItems=n(),
@@ -324,37 +433,37 @@ server <- function(input, output) {
                       BySchoolMonth <- rbind.data.frame(BySchoolMonth, BySchool, ByMonth, Overall)
                       }
 
-                     #Change labels for Per-School marginals (stats over ALL time) from Aug 2017 to ALL:
-                     BySchoolMonth$mo_yr_completed <- as.factor(BySchoolMonth$mo_yr_completed)
-                     BySchoolMonth$mo_yr_completed <- substr(as.character(BySchoolMonth$mo_yr_completed),1,7)
-                     BySchoolMonth$mo_yr_completed[BySchoolMonth$mo_yr_completed==mindateless1mostring] <- "ALL"
+                      #Change labels for Per-School marginals (stats over ALL time) from Aug 2017 to ALL:
+                      BySchoolMonth$mo_yr_completed <- as.factor(BySchoolMonth$mo_yr_completed)
+                      BySchoolMonth$mo_yr_completed <- substr(as.character(BySchoolMonth$mo_yr_completed),1,7)
+                      BySchoolMonth$mo_yr_completed[BySchoolMonth$mo_yr_completed==mindateless1mostring] <- "ALL"
 
-                     #Change labels for school_names so that ALL is displayed last:
-                     BySchoolMonth$school_name <- as.factor(BySchoolMonth$school_name)
-                     BySchoolMonth$school_name <- as.character(BySchoolMonth$school_name)
-                     BySchoolMonth <- arrange(BySchoolMonth, school_name)   #to ensure that ZZZ comes last
-                     BySchoolMonth$school_name <- as.factor(BySchoolMonth$school_name)
-                     levels(BySchoolMonth$school_name)[levels(BySchoolMonth$school_name)=="ZZZ"] <- "ALL"
+                      #Change labels for school_names so that ALL is displayed last:
+                      BySchoolMonth$school_name <- as.factor(BySchoolMonth$school_name)
+                      BySchoolMonth$school_name <- as.character(BySchoolMonth$school_name)
+                      BySchoolMonth <- arrange(BySchoolMonth, school_name)   #to ensure that ZZZ comes last
+                      BySchoolMonth$school_name <- as.factor(BySchoolMonth$school_name)
+                      levels(BySchoolMonth$school_name)[levels(BySchoolMonth$school_name)=="ZZZ"] <- "ALL"
 
-                     #Make the graph
-                     ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
-                       geom_bar(stat="identity", fill='goldenrod') +
-                       #scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
-                       scale_y_continuous(labels=comma) +
-                       labs(title="Ed Learnosity Items by School and Month",
-                            subtitle=paste("Blue Annotations:",input$extraStats),
-                            x="", y=as.name(input$yaxis)) +
-                            facet_grid(school_name ~ .) +
-                            theme(strip.text.y = element_text(angle=0),
-                                  legend.position="none") +
-                            geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
-                                      position = position_dodge(0.9),
-                                      vjust=0, hjust=0.5, color="blue")
-                          
-                    #END SCHOOL MONTH CASE
+                      #Make the graph
+                      ggplot(BySchoolMonth, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
+                        geom_bar(stat="identity", fill=colr) +
+                        #scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+                        scale_y_continuous(labels=comma) +
+                        labs(title="Ed Learnosity Items by School and Month",
+                             subtitle=paste("Blue Annotations:",input$extraStats),
+                             x="", y=as.name(input$yaxis)) +
+                             facet_grid(school_name ~ .) +
+                             theme(strip.text.y = element_text(angle=0),
+                                   legend.position="none") +
+                             geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
+                                       position = position_dodge(0.9),
+                                       vjust=0, hjust=0.5, color="blue")
+                           
+                     #END OF SCHOOL MONTH CASE
                  }else{
                    if(!is.na(input$dims[1]) & input$dims[1]=="school_name"){
-                      #START SCHOOL CASE
+                      #START OF SCHOOL CASE
                       BySchool <- dist %>%
                         group_by(school_name) %>%
                         summarize(mo_yr_completed=mindateless1mo,
@@ -369,7 +478,7 @@ server <- function(input, output) {
                                   None="")
                        #Make the graph
                        ggplot(BySchool, aes(x=school_name, y=eval(as.name(input$yaxis)))) +
-                         geom_bar(stat="identity", fill='goldenrod') +
+                         geom_bar(stat="identity", fill=colr) +
                          scale_y_continuous(labels=comma) +
                          labs(title="Ed Learnosity Items by School",
                               subtitle=paste("Blue Annotations:",input$extraStats),
@@ -379,10 +488,10 @@ server <- function(input, output) {
                          geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                    position = position_dodge(0.9),
                                    vjust=0, hjust=0.5, color="blue")
-                      #END SCHOOL CASE
+                      #END OF SCHOOL CASE
                    }else{
                      if(!is.na(input$dims[1]) & input$dims[1]=="mo_yr_completed"){
-                       #START MONTH CASE
+                       #START OF MONTH CASE
                        ByMonth <- dist %>%
                          group_by(mo_yr_completed) %>%
                          summarize(school_name="ZZZ",    #assuming that ZZZ will be later alphabetically than any school name
@@ -397,7 +506,7 @@ server <- function(input, output) {
                                    None="")
                         #Make the graph
                         ggplot(ByMonth, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
-                          geom_bar(stat="identity", fill='goldenrod') +
+                          geom_bar(stat="identity", fill=colr) +
                           scale_x_date(date_breaks = "1 month", date_labels = "%Y-%m") +
                           scale_y_continuous(labels=comma) +
                           labs(title="Ed Learnosity Items by Month",
@@ -408,10 +517,10 @@ server <- function(input, output) {
                           geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                     position = position_dodge(0.9),
                                     vjust=0, hjust=0.5, color="blue")
-                       #END MONTH CASE
+                       #END OF MONTH CASE
                      }else{
                        if(!is.na(input$dims[1]) & input$dims[1]=="grade"){
-                         #START GRADE CASE
+                         #START OF GRADE CASE
                          ByGrade <- dist %>%
                            group_by(grade) %>%
                            summarize(mo_yr_completed=mindateless1mo,
@@ -426,7 +535,7 @@ server <- function(input, output) {
                                      None="")
                          #Make the graph
                          ggplot(ByGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
-                           geom_bar(stat="identity", fill='goldenrod') +
+                           geom_bar(stat="identity", fill=colr) +
                            scale_y_continuous(labels=comma) +
                            labs(title="Ed Learnosity Items by Grade",
                                 subtitle=paste("Blue Annotations:",input$extraStats),
@@ -436,7 +545,7 @@ server <- function(input, output) {
                            geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                      position = position_dodge(0.9),
                                      vjust=0, hjust=0.5, color="blue")
-                         #END GRADE CASE
+                         #END OF GRADE CASE
                        }
                      }
                    }
