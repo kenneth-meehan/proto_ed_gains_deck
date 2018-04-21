@@ -194,11 +194,10 @@ server <- function(input, output) {
                      theme(strip.text.y = element_text(angle=0),
                            strip.text.x = element_text(angle=60, hjust=0.5, vjust=1),
                            # axis.text.x = element_text(angle=45, vjust=1, hjust=1, size=7),
-                           #axis.text.x = element_text(size=7),
                            legend.position="none") +
                      geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                position = position_dodge(0.9),
-                               vjust=0, hjust=0.5, color="blue")
+                               vjust=0, hjust=0.5, color="blue", size=3)
               #END OF SCHOOL MONTH GRADE CASE
            }else{
              if(!is.na(input$dims[1]) & input$dims[1]=="mo_yr_completed" &
