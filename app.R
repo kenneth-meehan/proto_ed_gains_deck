@@ -24,7 +24,7 @@ colr <- 'goldenrod'
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Ed Learnosity Data Exploration"),
+   titlePanel("Ed Data Exploration"),
    
    # Sidebar with inputs 
    fluidRow(
@@ -91,7 +91,7 @@ server <- function(input, output) {
            ggplot(Overall, aes(x="", y=eval(as.name(input$yaxis)))) +
              geom_bar(stat="identity", fill=colr) +
              scale_y_continuous(labels=comma) +
-             labs(title="Ed Learnosity Items District-Wide",
+             labs(title="Items District-Wide",
                   subtitle=paste("Blue Annotations:",input$extraStats),
                   x="", y=as.name(input$yaxis)) +
              theme(strip.text.y = element_text(angle=0),
@@ -178,17 +178,23 @@ server <- function(input, output) {
               BySchoolGradeMonth <- arrange(BySchoolGradeMonth, school_name)   #to ensure that ZZZ comes last
               BySchoolGradeMonth$school_name <- as.factor(BySchoolGradeMonth$school_name)
               levels(BySchoolGradeMonth$school_name)[levels(BySchoolGradeMonth$school_name)=="ZZZ"] <- "ALL"
+              
+              #Strip Grade down to numeric only
+              BySchoolGradeMonth$grade <- as.integer(gsub("Grade ", "", BySchoolGradeMonth$grade))
 
               #Make the graph
               ggplot(BySchoolGradeMonth, aes(x=grade, y=eval(as.name(input$yaxis)))) +
                      geom_bar(stat="identity", fill=colr) +
                      scale_y_continuous(labels=comma) +
-                     labs(title="Ed Learnosity Items by School, Month, and Grade",
+                     scale_x_continuous(breaks=seq(min(BySchoolGradeMonth$grade), max(BySchoolGradeMonth$grade), 2)) +
+                     labs(title="Items by School, Month, and Grade",
                           subtitle=paste("Blue Annotations:",input$extraStats),
                           x="", y=as.name(input$yaxis)) +
                      facet_grid(school_name ~ as.factor(substr(mo_yr_completed,1,7))) +
                      theme(strip.text.y = element_text(angle=0),
-                           axis.text.x = element_text(angle=90, vjust=0.5),
+                           strip.text.x = element_text(angle=60, hjust=0.5, vjust=1),
+                           # axis.text.x = element_text(angle=45, vjust=1, hjust=1, size=7),
+                           #axis.text.x = element_text(size=7),
                            legend.position="none") +
                      geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                position = position_dodge(0.9),
@@ -272,12 +278,13 @@ server <- function(input, output) {
                ggplot(ByMonthGrade, aes(x=mo_yr_completed, y=eval(as.name(input$yaxis)))) +
                  geom_bar(stat="identity", fill=colr) +
                  scale_y_continuous(labels=comma) +
-                 labs(title="Ed Learnosity Items by Month and Grade",
+                 labs(title="Items by Month and Grade",
                       subtitle=paste("Blue Annotations:",input$extraStats),
                       x="", y=as.name(input$yaxis)) +
                  facet_grid(grade ~ .) +
                  theme(strip.text.y = element_text(angle=0),
-                       legend.position="none") +
+                       legend.position="none",
+                       axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
                  geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                            position = position_dodge(0.9),
                            vjust=0, hjust=0.5, color="blue")
@@ -362,12 +369,13 @@ server <- function(input, output) {
                  ggplot(BySchoolGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
                    geom_bar(stat="identity", fill=colr) +
                    scale_y_continuous(labels=comma) +
-                   labs(title="Ed Learnosity Items by School and Grade",
+                   labs(title="Items by School and Grade",
                         subtitle=paste("Blue Annotations:",input$extraStats),
                         x="", y=as.name(input$yaxis)) +
                    facet_grid(school_name ~ .) +
                    theme(strip.text.y = element_text(angle=0),
-                         legend.position="none") +
+                         legend.position="none",
+                         axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
                    geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                              position = position_dodge(0.9),
                              vjust=0, hjust=0.5, color="blue")
@@ -450,12 +458,13 @@ server <- function(input, output) {
                         geom_bar(stat="identity", fill=colr) +
                         #scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
                         scale_y_continuous(labels=comma) +
-                        labs(title="Ed Learnosity Items by School and Month",
+                        labs(title="Items by School and Month",
                              subtitle=paste("Blue Annotations:",input$extraStats),
                              x="", y=as.name(input$yaxis)) +
                              facet_grid(school_name ~ .) +
                              theme(strip.text.y = element_text(angle=0),
-                                   legend.position="none") +
+                                   legend.position="none",
+                                   axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
                              geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                        position = position_dodge(0.9),
                                        vjust=0, hjust=0.5, color="blue")
@@ -480,10 +489,11 @@ server <- function(input, output) {
                        ggplot(BySchool, aes(x=school_name, y=eval(as.name(input$yaxis)))) +
                          geom_bar(stat="identity", fill=colr) +
                          scale_y_continuous(labels=comma) +
-                         labs(title="Ed Learnosity Items by School",
+                         labs(title="Items by School",
                               subtitle=paste("Blue Annotations:",input$extraStats),
                               x="", y=as.name(input$yaxis)) +
                          theme(strip.text.y = element_text(angle=0),
+                               axis.text.x = element_text(angle=45, vjust=1, hjust=1),
                                legend.position="none") +
                          geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                    position = position_dodge(0.9),
@@ -509,10 +519,11 @@ server <- function(input, output) {
                           geom_bar(stat="identity", fill=colr) +
                           scale_x_date(date_breaks = "1 month", date_labels = "%Y-%m") +
                           scale_y_continuous(labels=comma) +
-                          labs(title="Ed Learnosity Items by Month",
+                          labs(title="Items by Month",
                                subtitle=paste("Blue Annotations:",input$extraStats),
                                x="", y=as.name(input$yaxis)) +
                           theme(strip.text.y = element_text(angle=0),
+                                axis.text.x = element_text(angle=45, vjust=1, hjust=1),
                                 legend.position="none") +
                           geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                     position = position_dodge(0.9),
@@ -537,10 +548,11 @@ server <- function(input, output) {
                          ggplot(ByGrade, aes(x=grade, y=eval(as.name(input$yaxis)))) +
                            geom_bar(stat="identity", fill=colr) +
                            scale_y_continuous(labels=comma) +
-                           labs(title="Ed Learnosity Items by Grade",
+                           labs(title="Items by Grade",
                                 subtitle=paste("Blue Annotations:",input$extraStats),
                                 x="", y=as.name(input$yaxis)) +
                            theme(strip.text.y = element_text(angle=0),
+                                 axis.text.x = element_text(angle=45, vjust=1, hjust=1),
                                  legend.position="none") +
                            geom_text(aes(label = eval(as.name(input$extraStats)), y=0),
                                      position = position_dodge(0.9),
